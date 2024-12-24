@@ -1,42 +1,203 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Separator } from "@/components/ui/separator";
+import React, { useEffect, useState } from "react";
+import { AutosizeTextarea } from "./components/ui/autosize-textarea";
+import { Button } from "./components/ui/button";
 
-//import shadcn ui button
-import { Button } from "@/components/ui/button"
+type User = {
+  accesToken: string;
+  userId: string;
+};
 
-function App() {
-  const [count, setCount] = useState(0)
+const App: React.FC = () => {
+  const [user, setUser] = useState<User>();
+  const [thought, setThought] = useState("");
+  const [submissionState, setSubmissionState] = useState("");
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
+  const addBookmarkQuickie = async () => {
+    if (user) {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+
+      // Make a POST request (replace with your URL and any required data)
+      const postData = {
+        type: "link",
+        data: tab.url,
+      };
+
+      fetch("http://localhost:3000/api/extension", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + user.accesToken,
+          "x-supabase-user-id": user.userId,
+        },
+        body: JSON.stringify(postData),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            console.log("Error response", response);
+            setSubmissionState("failed");
+            return;
+          }
+          console.log("Success Response", response);
+          setSubmissionState("success");
+        })
+        .catch((error) => {
+          console.log(error);
+          setSubmissionState("failed");
+        });
+    }
+  };
+
+  const addTextQuickie = async () => {
+    if (user) {
+      // Make a POST request (replace with your URL and any required data)
+      const postData = {
+        type: "text",
+        data: thought,
+      };
+
+      fetch("http://localhost:3000/api/extension", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + user.accesToken,
+          "x-supabase-user-id": user.userId,
+        },
+        body: JSON.stringify(postData),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            console.log("Error response", response);
+            setSubmissionState("failed");
+            return;
+          }
+          console.log("Success response", response);
+          setThought("");
+          setSubmissionState("success");
+        })
+        .catch((error) => {
+          console.log("Error Response", error);
+          setSubmissionState("failed");
+        });
+    }
+  };
+
+  useEffect(() => {
+    async function loadCookie() {
+      // const cookieInput = document.getElementById('cookieValue');
+      // const bookmarkButton = document.getElementById('bookmarkButton');
+
+      // Change this to the domain you want to read the session cookie from
+      const targetUrl = "http://localhost:3000";
+
+      // Retrieve session cookie from the target URL
+      const cookies = await chrome.cookies.getAll({ url: targetUrl });
+      if (cookies.length) {
+        const accesTokenCookie = cookies.find(
+          (cookie) => cookie.name === "thinker-access-token"
+        );
+        const userIdCookie = cookies.find(
+          (cookie) => cookie.name === "thinker-user-id"
+        );
+        if (accesTokenCookie && userIdCookie) {
+          setUser({
+            accesToken: accesTokenCookie.value,
+            userId: userIdCookie.value,
+          });
+        }
+      }
+    }
+    loadCookie();
+  }, []);
+
+  useEffect(() => {
+    if (submissionState === "success") {
+      setTimeout(() => {
+        setSubmissionState("");
+      }, 5000);
+    }
+  }, [submissionState]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleKeyPress = (event: any) => {
+    if (event.key === "Enter" && thought.length) {
+      event.preventDefault();
+      addTextQuickie();
+    }
+  };
+
+  return submissionState === "failed" ? (
+    <div className="px-4 pt-2 pb-4 flex flex-col w-96 bg-red-400">
+      <p className="text-sm">
+        Oops, something went wrong. Please make sure you are logged in to{" "}
+        <a
+          className="text-blue-800 underline"
+          href="http://localhost:3000/login"
+          target="_blank"
+        >
+          Thinker
         </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
       </p>
-      <div>
-        <Button>Click me</Button>
+    </div>
+  ) : user ? (
+    <div className="px-4 pt-2 pb-4 flex flex-col w-96">
+      <div className="flex flex-row justify-between items-center w-full">
+        <p className="text-md font-black text-neutral-800">
+          Add link to current page
+        </p>
+        <Button
+          className="text-xs"
+          size={"sm"}
+          onClick={() => addBookmarkQuickie()}
+        >
+          Quickie Link
+        </Button>
       </div>
-      
-    </>
-  )
-}
+      <Separator className="mt-2" />
+      <AutosizeTextarea
+        autoFocus
+        placeholder="Or dump your thoughts, texts from website, etc here..."
+        value={thought}
+        onKeyDown={(e) => handleKeyPress(e)}
+        onChange={(e) => setThought(e.target.value)}
+        maxHeight={200}
+        className="mt-2"
+      />
+      <div className="mt-3 flex flex-row justify-between items-center ">
+        <p className="text-sm text-green-600">
+          {submissionState === "success" ? "Added Successfully" : null}
+        </p>
+        <div className="flex flex-row items-center gap-4">
+          <p className="text-sm text-neutral-500">Enter</p>
+          <Button
+            disabled={thought.length === 0}
+            onClick={() => addTextQuickie()}
+            className="text-xs"
+            size={"sm"}
+          >
+            Quickie Thought
+          </Button>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className="p-4 flex flex-col justify-center items-center w-96">
+      <p className="text-md">
+        You are not logged into Thinker. Please do it{" "}
+        <a
+          className="text-blue-400 underline"
+          href="http://localhost:3000/login"
+          target="_blank"
+        >
+          here
+        </a>
+      </p>
+    </div>
+  );
+};
 
-export default App
+export default App;

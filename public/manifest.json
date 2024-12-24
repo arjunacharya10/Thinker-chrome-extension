@@ -1,10 +1,24 @@
 {
     "manifest_version": 3,
-    "name": "Chrome Extension Vite Shadcn UI Starter",
-    "version": "0.0.0",
-    "description": "A modern, TypeScript-powered Chrome extension starter with React and Shadcn/UI",
+    "name": "Thinker Quickie Extension",
+    "version": "1.0.0",
+    "description": "A tool to quicly add your thoughts, or bookmark website links to Thinker",
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "permissions": [
+      "activeTab",
+      "cookies",
+      "storage",
+      "scripting"
+    ],
     "action": {
-      "default_popup": "index.html"
-    },
-    "permissions": []
+      "default_popup": "index.html",
+      "icons": {
+        "16": "/images/icon16.png",
+        "32": "/images/icon16.png",
+        "48": "/images/icon48.png",
+        "128": "/images/icon128.png"
+      }
+    }
   }
