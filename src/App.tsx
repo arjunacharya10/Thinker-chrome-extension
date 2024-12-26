@@ -27,7 +27,7 @@ const App: React.FC = () => {
         data: tab.url,
       };
 
-      fetch("http://localhost:3000/api/extension", {
+      fetch("https://web.thinkerapp.org/api/extension", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,7 +60,7 @@ const App: React.FC = () => {
         data: thought,
       };
 
-      fetch("http://localhost:3000/api/extension", {
+      fetch("https://web.thinkerapp.org/api/extension", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -92,7 +92,7 @@ const App: React.FC = () => {
       // const bookmarkButton = document.getElementById('bookmarkButton');
 
       // Change this to the domain you want to read the session cookie from
-      const targetUrl = "http://localhost:3000";
+      const targetUrl = "https://web.thinkerapp.org";
 
       // Retrieve session cookie from the target URL
       const cookies = await chrome.cookies.getAll({ url: targetUrl });
@@ -136,7 +136,7 @@ const App: React.FC = () => {
         Oops, something went wrong. Please make sure you are logged in to{" "}
         <a
           className="text-blue-800 underline"
-          href="http://localhost:3000/login"
+          href="https://web.thinkerapp.org/login"
           target="_blank"
         >
           Thinker
@@ -190,7 +190,7 @@ const App: React.FC = () => {
         You are not logged into Thinker. Please do it{" "}
         <a
           className="text-blue-400 underline"
-          href="http://localhost:3000/login"
+          href="http://web.thinkerapp.org/login"
           target="_blank"
         >
           here
